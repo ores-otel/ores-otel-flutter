@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:developer' as developer;
 
+import 'package:flutter/foundation.dart';
+
 import 'clock.dart';
 
 enum StartupLogLevel { debug, info, warning, error }
@@ -117,8 +119,9 @@ final class DeveloperStartupDiagnosticSink implements StartupDiagnosticSink {
 
   @override
   void write(StartupDiagnosticEvent event) {
+    final encoded = jsonEncode(event.toJson());
     developer.log(
-      jsonEncode(event.toJson()),
+      encoded,
       name: 'ores.startup',
       level: switch (event.level) {
         StartupLogLevel.debug => 500,
@@ -127,6 +130,7 @@ final class DeveloperStartupDiagnosticSink implements StartupDiagnosticSink {
         StartupLogLevel.error => 1000,
       },
     );
+    debugPrint('ores.startup $encoded');
   }
 }
 

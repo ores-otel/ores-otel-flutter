@@ -15,8 +15,9 @@ The emitted JSON conforms to the versioned
   independent phases concurrently after that frame;
 - every `StartupTask` has a finite timeout, a cooperative cancellation token,
   a slow-phase watchdog, typed success/degraded/failure outcomes, and retry;
-- structured launch events go to `dart:developer` (Android logcat) and a
-  bounded memory ring buffer exposed through `StartupDiagnosticsScope`;
+- structured launch events go to `dart:developer` and Flutter's Android
+  logcat-visible console path, plus a bounded memory ring buffer exposed
+  through `StartupDiagnosticsScope`;
 - `OresStartupStatusPanel` keeps timeout/failure paths usable and provides
   retry plus copyable, secret-redacted diagnostics.
 
