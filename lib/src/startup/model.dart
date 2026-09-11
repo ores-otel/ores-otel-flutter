@@ -179,6 +179,22 @@ final class StartupPhaseCancelled extends StartupPhaseOutcome {
   bool get retryable => true;
 }
 
+extension StartupPhaseOutcomeValues on StartupPhaseOutcome {
+  /// Rebuild the outcome as a detached value instead of retaining a nested
+  /// object supplied by a mutable/effectful coordinator boundary.
+  StartupPhaseOutcome detachedCopy() => switch (this) {
+        StartupPhasePending() => StartupPhasePending(),
+        StartupPhaseRunning() => StartupPhaseRunning(),
+        StartupPhaseSucceeded() => StartupPhaseSucceeded(),
+        StartupPhaseTimedOut() => StartupPhaseTimedOut(),
+        StartupPhaseDegraded(:final reasonCode) =>
+          StartupPhaseDegraded(reasonCode),
+        StartupPhaseFailed(:final reasonCode, :final retryable) =>
+          StartupPhaseFailed(reasonCode: reasonCode, retryable: retryable),
+        StartupPhaseCancelled() => StartupPhaseCancelled(),
+      };
+}
+
 final class StartupPhaseSnapshot {
   const StartupPhaseSnapshot({
     required this.name,
@@ -224,12 +240,42 @@ final class StartupPhaseSnapshot {
     elapsed: elapsed ?? this.elapsed,
     errorType: clearErrorType ? null : (errorType ?? this.errorType),
   );
+
+  /// Build a fully detached phase snapshot for publication across UI/Rx
+  /// boundaries. Nested outcomes and time/duration values are reconstructed;
+  /// the returned phase does not share mutable container identity with the
+  /// coordinator's working map.
+  StartupPhaseSnapshot detachedCopy() => StartupPhaseSnapshot(
+    name: name,
+    dependency: dependency,
+    critical: critical,
+    attempt: attempt,
+    outcome: outcome.detachedCopy(),
+    startedAtUtc: _copyDateTime(startedAtUtc),
+    finishedAtUtc: _copyDateTime(finishedAtUtc),
+    elapsed: Duration(microseconds: elapsed.inMicroseconds),
+    errorType: errorType,
+  );
 }
 
 enum StartupOverallStatus { idle, running, ready, degraded, failed }
 
 final class StartupSnapshot {
   const StartupSnapshot({required this.status, required this.phases});
+
+  /// Construct a publication-safe value by rebuilding the list and every
+  /// nested phase/outcome. The original const constructor remains available
+  /// for source compatibility and compile-time fixtures.
+  factory StartupSnapshot.detached({
+    required StartupOverallStatus status,
+    required Iterable<StartupPhaseSnapshot> phases,
+  }) =>
+      StartupSnapshot(
+        status: status,
+        phases: List<StartupPhaseSnapshot>.unmodifiable(
+          phases.map((phase) => phase.detachedCopy()),
+        ),
+      );
 
   final StartupOverallStatus status;
   final List<StartupPhaseSnapshot> phases;
@@ -243,6 +289,13 @@ final class StartupSnapshot {
     (phase) => phase.outcome.isTerminal && phase.outcome.retryable,
   );
 }
+
+DateTime? _copyDateTime(DateTime? value) => value == null
+    ? null
+    : DateTime.fromMicrosecondsSinceEpoch(
+        value.microsecondsSinceEpoch,
+        isUtc: value.isUtc,
+      );
 
 void _checkSafeIdentifier(String value, String field) {
   if (!RegExp(r'^[a-z][a-z0-9_.-]{0,63}$').hasMatch(value)) {
