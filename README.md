@@ -2,6 +2,36 @@
 
 Flutter for mobile, desktop, and mobile web. No React. UI lives in `lib/src/`.
 
+## Fleet import
+
+New Flutter applications should prefer the single public barrel:
+
+```dart
+import 'package:ores_otel_flutter/ores_otel_flutter.dart';
+```
+
+That import exposes the shared startup boundary plus the canonical
+`next-loggers/v1` Dart API. Dependency resolution is declared in both
+`pubspec.yaml` and `.zpkg.toml`; Zed remains the cross-repository dependency
+authority while Pub resolves the concrete Dart package.
+
+To forward startup events into the same structured logger used after launch,
+pass a `NextLoggersStartupDiagnosticSink` to `runOresFlutterApp`:
+
+```dart
+final logger = Logger(appName: 'my-app');
+
+runOresFlutterApp(
+  appName: 'my-app',
+  sinks: [NextLoggersStartupDiagnosticSink(logger: logger)],
+  builder: (diagnostics) => MyApp(diagnostics: diagnostics),
+);
+```
+
+The sink forwards only the already-redacted `ores-startup/v1` payload.
+Telemetry transport failures are contained and cannot turn an otherwise usable
+application launch into a startup failure.
+
 ## Responsive startup diagnostics
 
 `package:ores_otel_flutter/startup.dart` provides the fleet startup boundary:
