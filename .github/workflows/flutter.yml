@@ -1,0 +1,62 @@
+name: Flutter package CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/flutter.yml"
+      - "lib/**"
+      - "test/**"
+      - "pubspec.yaml"
+      - "pubspec.lock"
+      - "analysis_options.yaml"
+  pull_request:
+    paths:
+      - ".github/workflows/flutter.yml"
+      - "lib/**"
+      - "test/**"
+      - "pubspec.yaml"
+      - "pubspec.lock"
+      - "analysis_options.yaml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: flutter-package-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: 3.44.2
+
+jobs:
+  analyze-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed lib test
+      - name: Analyze with warnings denied
+        run: flutter analyze --fatal-infos --fatal-warnings
+      - name: Run tests
+        run: flutter test --reporter expanded
+      - name: Reject credential-shaped tracked text
+        shell: bash
+        run: |
+          if git grep -nE \
+            '(ghp_[A-Za-z0-9]{20,}|lin_api_[A-Za-z0-9]{20,}|-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----)' \
+            -- ':!pubspec.lock'; then
+            echo 'credential-shaped value detected in tracked source'
+            exit 1
+          fi
