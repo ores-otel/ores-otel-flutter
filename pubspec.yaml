@@ -7,10 +7,14 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  oresoftware_next_loggers:
+    git:
+      url: https://github.com/ores-otel/ores.otel.log.git
+      ref: 91bf4b8a48773799f10707bf1c6ae7336a393bde
+      path: sdk/dart
   rxdart: ^0.28.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
 flutter:
   uses-material-design: true
-
