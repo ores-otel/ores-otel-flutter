@@ -14,8 +14,7 @@ typedef StartupTransportErrorHandler = void Function(
 /// The startup boundary stays usable even when a telemetry transport is down:
 /// delivery failures are reported only through [onTransportError] and never
 /// escape back into application startup.
-final class NextLoggersStartupDiagnosticSink
-    implements StartupDiagnosticSink {
+final class NextLoggersStartupDiagnosticSink implements StartupDiagnosticSink {
   NextLoggersStartupDiagnosticSink({
     required this.logger,
     this.onTransportError,
@@ -40,12 +39,10 @@ final class NextLoggersStartupDiagnosticSink
         StartupLogLevel.error => logger.error('flutter.startup.$wireEvent'),
       };
 
-      await logEvent
-          .addFields(<String, Object?>{
-            ...fields,
-            'source': 'ores_otel_flutter.startup',
-          })
-          .send();
+      await logEvent.addFields(<String, Object?>{
+        ...fields,
+        'source': 'ores_otel_flutter.startup',
+      }).send();
     } catch (error, stackTrace) {
       onTransportError?.call(error, stackTrace);
     }
