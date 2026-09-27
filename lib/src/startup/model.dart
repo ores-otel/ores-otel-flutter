@@ -1,7 +1,7 @@
 import 'dart:async';
 
-typedef StartupOperation =
-    Future<StartupTaskResult> Function(StartupCancellationToken cancellation);
+typedef StartupOperation = Future<StartupTaskResult> Function(
+    StartupCancellationToken cancellation);
 
 sealed class StartupTaskResult {
   const StartupTaskResult();
@@ -227,35 +227,35 @@ final class StartupPhaseSnapshot {
     String? errorType,
     bool clearFinishedAt = false,
     bool clearErrorType = false,
-  }) => StartupPhaseSnapshot(
-    name: name,
-    dependency: dependency,
-    critical: critical,
-    attempt: attempt ?? this.attempt,
-    outcome: outcome ?? this.outcome,
-    startedAtUtc: startedAtUtc ?? this.startedAtUtc,
-    finishedAtUtc: clearFinishedAt
-        ? null
-        : (finishedAtUtc ?? this.finishedAtUtc),
-    elapsed: elapsed ?? this.elapsed,
-    errorType: clearErrorType ? null : (errorType ?? this.errorType),
-  );
+  }) =>
+      StartupPhaseSnapshot(
+        name: name,
+        dependency: dependency,
+        critical: critical,
+        attempt: attempt ?? this.attempt,
+        outcome: outcome ?? this.outcome,
+        startedAtUtc: startedAtUtc ?? this.startedAtUtc,
+        finishedAtUtc:
+            clearFinishedAt ? null : (finishedAtUtc ?? this.finishedAtUtc),
+        elapsed: elapsed ?? this.elapsed,
+        errorType: clearErrorType ? null : (errorType ?? this.errorType),
+      );
 
   /// Build a fully detached phase snapshot for publication across UI/Rx
   /// boundaries. Nested outcomes and time/duration values are reconstructed;
   /// the returned phase does not share mutable container identity with the
   /// coordinator's working map.
   StartupPhaseSnapshot detachedCopy() => StartupPhaseSnapshot(
-    name: name,
-    dependency: dependency,
-    critical: critical,
-    attempt: attempt,
-    outcome: outcome.detachedCopy(),
-    startedAtUtc: _copyDateTime(startedAtUtc),
-    finishedAtUtc: _copyDateTime(finishedAtUtc),
-    elapsed: Duration(microseconds: elapsed.inMicroseconds),
-    errorType: errorType,
-  );
+        name: name,
+        dependency: dependency,
+        critical: critical,
+        attempt: attempt,
+        outcome: outcome.detachedCopy(),
+        startedAtUtc: _copyDateTime(startedAtUtc),
+        finishedAtUtc: _copyDateTime(finishedAtUtc),
+        elapsed: Duration(microseconds: elapsed.inMicroseconds),
+        errorType: errorType,
+      );
 }
 
 enum StartupOverallStatus { idle, running, ready, degraded, failed }
@@ -286,8 +286,8 @@ final class StartupSnapshot {
       status == StartupOverallStatus.degraded ||
       status == StartupOverallStatus.failed;
   bool get canRetry => phases.any(
-    (phase) => phase.outcome.isTerminal && phase.outcome.retryable,
-  );
+        (phase) => phase.outcome.isTerminal && phase.outcome.retryable,
+      );
 }
 
 DateTime? _copyDateTime(DateTime? value) => value == null
