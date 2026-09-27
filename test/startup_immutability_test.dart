@@ -41,7 +41,8 @@ void main() {
     );
   });
 
-  test('phase detachedCopy preserves values without sharing outcome identity', () {
+  test('phase detachedCopy preserves values without sharing outcome identity',
+      () {
     final phase = StartupPhaseSnapshot(
       name: 'database_open',
       dependency: 'local_database',
