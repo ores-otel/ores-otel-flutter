@@ -45,14 +45,8 @@ jobs:
           cache: true
       - name: Resolve dependencies
         run: flutter pub get
-      - name: Print canonical formatting diff
-        shell: bash
-        run: |
-          dart format lib test
-          git diff -- lib test
-          if ! git diff --quiet -- lib test; then
-            exit 1
-          fi
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed lib test
       - name: Analyze with warnings denied
         run: flutter analyze --fatal-infos --fatal-warnings
       - name: Run tests
