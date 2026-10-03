@@ -26,14 +26,20 @@ final class StartupCoordinator extends ChangeNotifier
     if (_tasks.length != tasks.length) {
       throw ArgumentError('startup task names must be unique');
     }
-    _snapshot = StartupSnapshot(
+    _snapshot = StartupSnapshot.detached(
       status: StartupOverallStatus.idle,
-      phases: List.unmodifiable(_phases.values),
+      phases: _phases.values,
     );
   }
 
   final StartupDiagnostics diagnostics;
   final Map<String, StartupTask> _tasks;
+
+  // This map is the coordinator's private async state machine. Runs complete
+  // independently and need O(1) replacement by task name, so rebuilding a new
+  // map for every timer/completion would add allocation churn without making
+  // the effect boundary safer. Published `value` snapshots are instead rebuilt
+  // deeply through StartupSnapshot.detached and never expose these instances.
   final Map<String, StartupPhaseSnapshot> _phases;
   final Map<String, _ActiveRun> _activeRuns = {};
   late StartupSnapshot _snapshot;
@@ -208,7 +214,7 @@ final class StartupCoordinator extends ChangeNotifier
   }
 
   void _recomputeSnapshot() {
-    final phases = List<StartupPhaseSnapshot>.unmodifiable(_phases.values);
+    final phases = _phases.values.toList(growable: false);
     final status = switch (phases) {
       [] => StartupOverallStatus.ready,
       _ when phases.any((phase) => !phase.outcome.isTerminal) =>
@@ -233,7 +239,7 @@ final class StartupCoordinator extends ChangeNotifier
         StartupOverallStatus.degraded,
       _ => StartupOverallStatus.ready,
     };
-    _snapshot = StartupSnapshot(status: status, phases: phases);
+    _snapshot = StartupSnapshot.detached(status: status, phases: phases);
     notifyListeners();
   }
 
