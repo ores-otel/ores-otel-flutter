@@ -48,7 +48,8 @@ class ApiClient {
         (uri.path.isNotEmpty && uri.path != '/')) {
       return null;
     }
-    final local = uri.host == 'localhost' ||
+    final local =
+        uri.host == 'localhost' ||
         uri.host == '127.0.0.1' ||
         uri.host == '::1';
     if (uri.scheme != 'https' && !(uri.scheme == 'http' && local)) {
